@@ -8,6 +8,7 @@
 *.ipr
 *.iws
 .vscode/
+.cursor/
 *.swp
 *.swo
 *~
@@ -88,6 +89,19 @@ compile_commands.json
 
 # ---- Documents ----
 docx/
+
+# ---- Python Backend ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+*.egg
+.pytest_cache/
+.mypy_cache/
+backend/data/*.db
+backend/venv/
+backend/.venv/
 
 # ---- Environment ----
 .env

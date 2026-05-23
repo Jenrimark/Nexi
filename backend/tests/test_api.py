@@ -24,6 +24,7 @@ async def reset_db():
     db = await get_db()
     await db.execute("DELETE FROM links")
     await db.execute("DELETE FROM notes")
+    await db.execute("DELETE FROM app_settings")
     await db.commit()
     yield
     await close_db()
@@ -61,6 +62,29 @@ async def test_upload_and_graph(client):
     body = graph.json()
     assert len(body["nodes"]) == 2
     assert isinstance(body["edges"], list)
+
+
+@pytest.mark.asyncio
+async def test_link_settings(client):
+    resp = await client.get("/api/settings/link")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["mode"] in ("hybrid", "vector_only", "custom_llm")
+    assert "top_k" in body
+    assert "llm_available" in body
+
+
+@pytest.mark.asyncio
+async def test_upload_returns_relation_fields(client):
+    await client.post("/api/upload_note", json={"content": "人工智能与知识图谱"})
+    r2 = await client.post("/api/upload_note", json={"content": "人工智能知识图谱应用"})
+    assert r2.status_code == 200
+    data = r2.json()
+    assert "strategy" in data
+    if data["links"]:
+        link = data["links"][0]
+        assert "relation" in link
+        assert "reason" in link
 
 
 @pytest.mark.asyncio

@@ -4,6 +4,8 @@ import {
   GraphResponse,
   HealthResponse,
   HttpJsonHeader,
+  LinkSettingsResponse,
+  LinkSettingsUpdate,
   UploadNoteRequest,
   UploadNoteResponse
 } from '../model/GraphTypes';
@@ -21,17 +23,33 @@ export class NexiApiService {
 
   async uploadNote(content: string): Promise<UploadNoteResponse> {
     const body: UploadNoteRequest = { content: content };
-    return this.request<UploadNoteResponse>(http.RequestMethod.POST, '/upload_note', body);
+    return this.request<UploadNoteResponse>(
+      http.RequestMethod.POST,
+      '/upload_note',
+      JSON.stringify(body)
+    );
   }
 
   async getGraph(): Promise<GraphResponse> {
     return this.request<GraphResponse>(http.RequestMethod.GET, '/get_graph');
   }
 
+  async getLinkSettings(): Promise<LinkSettingsResponse> {
+    return this.request<LinkSettingsResponse>(http.RequestMethod.GET, '/settings/link');
+  }
+
+  async updateLinkSettings(update: LinkSettingsUpdate): Promise<LinkSettingsResponse> {
+    return this.request<LinkSettingsResponse>(
+      http.RequestMethod.PUT,
+      '/settings/link',
+      JSON.stringify(update)
+    );
+  }
+
   private async request<T>(
     method: http.RequestMethod,
     path: string,
-    body?: UploadNoteRequest
+    extraData?: string
   ): Promise<T> {
     const httpRequest = http.createHttp();
     try {
@@ -39,7 +57,7 @@ export class NexiApiService {
       const options: http.HttpRequestOptions = {
         method: method,
         header: header,
-        extraData: body ? JSON.stringify(body) : undefined,
+        extraData: extraData,
         connectTimeout: API_TIMEOUT_MS,
         readTimeout: API_TIMEOUT_MS,
         expectDataType: http.HttpDataType.STRING

@@ -2,11 +2,13 @@ import { common } from '@kit.AbilityKit';
 import { nexiApi } from '../common/api/NexiApiService';
 import { API_BASE_URL } from '../common/config/ApiConfig';
 import { PrivacyPreferences } from '../common/storage/PrivacyPreferences';
-import { GraphNode, GraphResponse, EMPTY_GRAPH } from '../common/model/GraphTypes';
+import { GraphNode, GraphResponse, EMPTY_GRAPH, LinkSettingsResponse, LinkSettingsUpdate, DEFAULT_LINK_SETTINGS } from '../common/model/GraphTypes';
 import { ClayInput } from '../components/ClayInput';
 import { GraphCanvas } from '../components/GraphCanvas';
+import { LinkSettingsPanel } from '../components/LinkSettingsPanel';
 import { getNodeRelations, NodeDetailPanel, NodeRelation } from '../components/NodeDetailPanel';
 import { PrivacyGateOverlay } from '../components/PrivacyGateOverlay';
+import { formatLinkStrategy } from '../common/util/StrategyLabel';
 
 @Entry
 @Component
@@ -22,6 +24,8 @@ struct Index {
   @State appReady: boolean = false;
   @State showPrivacyGate: boolean = false;
   @State showGraph: boolean = false;
+  @State showSettings: boolean = false;
+  @State linkSettings: LinkSettingsResponse = DEFAULT_LINK_SETTINGS;
 
   aboutToAppear(): void {
     this.checkPrivacyAndBootstrap();
@@ -36,6 +40,18 @@ struct Index {
             .fontWeight(FontWeight.Bold)
             .fontColor('#E0E0FF')
           Blank()
+          if (this.appReady) {
+            Button({ type: ButtonType.Circle }) {
+              Text('⚙')
+                .fontSize(16)
+                .fontColor('#888899')
+            }
+            .width(36)
+            .height(36)
+            .backgroundColor('#FFFFFF10')
+            .margin({ right: 8 })
+            .onClick(() => this.openSettings())
+          }
           if (this.appReady && this.graphData.nodes.length > 0) {
             Text(`${this.graphData.nodes.length} 节点 · ${this.graphData.edges.length} 边`)
               .fontSize(12)
@@ -125,6 +141,20 @@ struct Index {
           onDecline: () => this.onPrivacyDeclined()
         })
       }
+
+      if (this.showSettings) {
+        Column() {
+          Blank()
+          LinkSettingsPanel({
+            settings: this.linkSettings,
+            onSave: (update: LinkSettingsUpdate) => this.saveLinkSettings(update),
+            onClose: () => { this.showSettings = false; }
+          })
+        }
+        .width('100%')
+        .height('100%')
+        .backgroundColor('#99000000')
+      }
     }
     .width('100%')
     .height('100%')
@@ -164,6 +194,7 @@ struct Index {
   private async bootstrapApp(): Promise<void> {
     try {
       await nexiApi.healthCheck();
+      this.linkSettings = await nexiApi.getLinkSettings();
       this.statusText = '';
       await this.loadGraph();
     } catch (_err) {
@@ -201,16 +232,17 @@ struct Index {
     }
 
     this.isLoading = true;
-    this.statusText = '正在向量化并匹配关联…';
+    this.statusText = '正在分析语义并调用 AI 匹配关联…';
     this.closeDetail();
 
     try {
       const result = await nexiApi.uploadNote(content);
       this.noteInput = '';
       this.highlightNodeId = result.id;
+      const strategyLabel = formatLinkStrategy(result.strategy);
       this.statusText = result.links.length > 0
-        ? `已录入 #${result.id}，发现 ${result.links.length} 条关联`
-        : `已录入 #${result.id}`;
+        ? `已录入 #${result.id} · ${strategyLabel} · ${result.links.length} 条关联`
+        : `已录入 #${result.id} · ${strategyLabel}`;
       await this.loadGraph();
     } catch (err) {
       this.statusText = `录入失败：${(err as Error).message}`;
@@ -225,5 +257,18 @@ struct Index {
     } catch (err) {
       this.statusText = `图谱加载失败：${(err as Error).message}`;
     }
+  }
+
+  private async openSettings(): Promise<void> {
+    try {
+      this.linkSettings = await nexiApi.getLinkSettings();
+      this.showSettings = true;
+    } catch (err) {
+      this.statusText = `读取设置失败：${(err as Error).message}`;
+    }
+  }
+
+  private async saveLinkSettings(update: LinkSettingsUpdate): Promise<void> {
+    this.linkSettings = await nexiApi.updateLinkSettings(update);
   }
 }

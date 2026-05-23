@@ -4,6 +4,8 @@ export interface NodeRelation {
   peerId: number;
   peerContent: string;
   similarity: number;
+  relation: string;
+  reason: string;
   direction: 'out' | 'in';
 }
 
@@ -19,6 +21,8 @@ export function getNodeRelations(nodeId: number, graph: GraphResponse): NodeRela
         peerId: edge.target,
         peerContent: peer?.content ?? `#${edge.target}`,
         similarity: edge.similarity,
+        relation: edge.relation,
+        reason: edge.reason,
         direction: 'out'
       });
     } else if (edge.target === nodeId) {
@@ -27,6 +31,8 @@ export function getNodeRelations(nodeId: number, graph: GraphResponse): NodeRela
         peerId: edge.source,
         peerContent: peer?.content ?? `#${edge.source}`,
         similarity: edge.similarity,
+        relation: edge.relation,
+        reason: edge.reason,
         direction: 'in'
       });
     }
@@ -42,9 +48,14 @@ export function buildRelationSummary(relations: NodeRelation[]): string {
   }
 
   const top = relations[0];
+  if (top.reason.length > 0) {
+    return top.reason;
+  }
+  if (top.relation.length > 0) {
+    return `${top.relation}（相似度 ${Math.round(top.similarity * 100)}%），共 ${relations.length} 条关联。`;
+  }
   const simPct = Math.round(top.similarity * 100);
-  return `与「${truncate(top.peerContent, 20)}」语义最接近（相似度 ${simPct}%），` +
-    `共发现 ${relations.length} 条关联。`;
+  return `与「${truncate(top.peerContent, 20)}」语义最接近（相似度 ${simPct}%），共 ${relations.length} 条关联。`;
 }
 
 function truncate(text: string, max: number): string {
@@ -118,17 +129,27 @@ export struct NodeDetailPanel {
         List({ space: 8 }) {
           ForEach(this.relations, (rel: NodeRelation) => {
             ListItem() {
-              Row({ space: 8 }) {
-                Text(`${Math.round(rel.similarity * 100)}%`)
-                  .fontSize(12)
-                  .fontColor('#00CEC9')
-                  .width(36)
-                Text(truncate(rel.peerContent, 28))
-                  .fontSize(13)
-                  .fontColor('#C8C8E0')
-                  .layoutWeight(1)
-                  .maxLines(1)
-                  .textOverflow({ overflow: TextOverflow.Ellipsis })
+              Column({ space: 4 }) {
+                Row({ space: 8 }) {
+                  Text(`${Math.round(rel.similarity * 100)}%`)
+                    .fontSize(12)
+                    .fontColor('#00CEC9')
+                    .width(36)
+                  Text(truncate(rel.peerContent, 24))
+                    .fontSize(13)
+                    .fontColor('#C8C8E0')
+                    .layoutWeight(1)
+                    .maxLines(1)
+                    .textOverflow({ overflow: TextOverflow.Ellipsis })
+                }
+                .width('100%')
+                if (rel.relation.length > 0) {
+                  Text(rel.relation)
+                    .fontSize(11)
+                    .fontColor('#6C5CE7')
+                    .width('100%')
+                    .padding({ left: 44 })
+                }
               }
               .width('100%')
               .padding({ top: 8, bottom: 8 })
@@ -137,7 +158,7 @@ export struct NodeDetailPanel {
           }, (rel: NodeRelation) => `${rel.peerId}_${rel.direction}`)
         }
         .width('100%')
-        .height(Math.min(this.relations.length * 44, 180))
+        .height(Math.min(this.relations.length * 56, 200))
         .margin({ top: 8 })
       }
     }

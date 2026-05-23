@@ -10,5 +10,11 @@ pip install -r requirements.txt -q
 
 export USE_MOCK_EMBEDDING="${USE_MOCK_EMBEDDING:-1}"
 export SIMILARITY_THRESHOLD="${SIMILARITY_THRESHOLD:-0.45}"
+if [ -f ".env" ]; then
+  set -a
+  # shellcheck disable=SC1091
+  source .env
+  set +a
+fi
 echo "Starting Nexi API on http://0.0.0.0:8000 (mock embedding: ${USE_MOCK_EMBEDDING})"
 exec uvicorn app.main:app --reload --host 0.0.0.0 --port 8000

@@ -16,5 +16,5 @@ if [ -f ".env" ]; then
   source .env
   set +a
 fi
-echo "Starting Nexi API on http://0.0.0.0:8000 (mock embedding: ${USE_MOCK_EMBEDDING})"
+echo "Starting 灵绪 Nexi API on http://0.0.0.0:8000 (mock embedding: ${USE_MOCK_EMBEDDING})"
 exec uvicorn app.main:app --reload --host 0.0.0.0 --port 8000

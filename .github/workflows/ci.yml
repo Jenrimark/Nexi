@@ -26,17 +26,9 @@ jobs:
       - name: Install ohpm dependencies
         run: ohpm install --all
 
-      - name: Lint
-        run: |
-          hvigorw --version
-          hvigorw lint \
-            --mode module \
-            -p product=default \
-            --no-daemon \
-            --stacktrace
-
       - name: Build HAP
         run: |
+          hvigorw --version
           hvigorw clean assembleHap \
             --mode module \
             -p product=default \

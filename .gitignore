@@ -1,0 +1,95 @@
+# =====================
+# HarmonyOS .gitignore
+# =====================
+
+# ---- IDE / Editor ----
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# ---- Build Output ----
+**/build/
+**/output/
+**/.cxx/
+**/intermediates/
+**/generated/
+*.hap
+*.har
+*.hsp
+
+# ---- Hvigor Build System ----
+.hvigor/
+**/.hvigor/
+hvigor/.hvigorcache
+**/.hvigorcache
+
+# ---- Dependencies ----
+node_modules/
+oh_modules/
+**/oh_modules/
+
+# ---- Local Config ----
+local.properties
+**/local.properties
+*.local
+
+# ---- Lock Files ----
+oh-package-lock.json5
+
+# ---- OS Generated ----
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ---- Logs ----
+*.log
+**/logs/
+
+# ---- Testing ----
+**/.test/
+**/coverage/
+.cache/
+.appanalyzer/
+
+# ---- Signing & Credentials ----
+*.p12
+*.pem
+*.key
+*.cert
+*.keystore
+**/sign/
+
+# ---- C/C++ Native (NAPI) ----
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+.clangd/
+.clang-format
+.clang-tidy
+compile_commands.json
+
+# ---- Documents ----
+docx/
+
+# ---- Environment ----
+.env
+.env.local
+.env.*.local

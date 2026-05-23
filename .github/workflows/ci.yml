@@ -1,0 +1,58 @@
+name: HarmonyOS CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup hvigor
+        run: npm install -g @ohos/hvigor-ohos-plugin
+
+      - name: Install dependencies
+        run: ohpm install
+
+      - name: Lint
+        run: hvigorw lint
+
+      - name: Build
+        run: hvigorw assembleHap
+
+      - name: Upload HAP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hap-output
+          path: entry/build/default/outputs/default/*.hap
+          retention-days: 7
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: ohpm install
+
+      - name: Run tests
+        run: hvigorw test
